@@ -1,0 +1,6 @@
+streamlit
+pandas
+streamlit-folium
+websocket-client
+pandas
+requests
