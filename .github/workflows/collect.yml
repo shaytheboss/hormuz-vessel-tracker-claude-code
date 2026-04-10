@@ -37,4 +37,4 @@ jobs:
           git config user.email "actions@github.com"
           git add hormuz_ships.db
           git diff --staged --quiet || git commit -m "data: $(date -u '+%Y-%m-%d %H:%M')"
-          git push origin HEAD:data
+          git push origin HEAD:data --force
