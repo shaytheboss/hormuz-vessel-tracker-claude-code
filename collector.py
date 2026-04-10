@@ -52,7 +52,7 @@ def run():
     before = conn.execute("SELECT COUNT(*) FROM ship_logs").fetchone()[0]
 
     ws = websocket.WebSocketApp(
-        "wss://stream.aisstream.io/v1/stream",
+        "wss://stream.aisstream.io/v0/stream",
         on_open=on_open,
         on_message=on_message,
         on_error=lambda ws, e: print(f"WS Error: {e}"),
