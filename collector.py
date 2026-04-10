@@ -1,7 +1,7 @@
 import websocket, json, sqlite3, os, datetime, threading, time
 
 DB_PATH = "hormuz_ships.db"
-DURATION = int(os.getenv("COLLECTION_SECONDS", "300"))  # ברירת מחדל: 5 דקות
+DURATION = int(os.getenv("COLLECTION_SECONDS", "300"))
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -10,7 +10,7 @@ def init_db():
          lat REAL, lon REAL, timestamp DATETIME)''')
     conn.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON ship_logs(timestamp)")
     conn.commit()
-    return conn
+    conn.close()
 
 def on_message(ws, message):
     try:
@@ -19,7 +19,9 @@ def on_message(ws, message):
         pos = msg.get("Message", {}).get("PositionReport", {})
         if not (meta and pos and pos.get("Latitude")):
             return
-        ws.db_conn.execute(
+        # חיבור חדש בכל הודעה — בטוח לthread
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute(
             "INSERT INTO ship_logs VALUES (?,?,?,?,?,?,?)",
             (str(meta.get("MMSI")),
              str(meta.get("ShipName", "Unknown")).strip(),
@@ -29,7 +31,8 @@ def on_message(ws, message):
              pos.get("Longitude"),
              datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         )
-        ws.db_conn.commit()
+        conn.commit()
+        conn.close()
         print(f"✓ {meta.get('ShipName', 'Unknown')}")
     except Exception as e:
         print(f"Error: {e}")
@@ -42,15 +45,14 @@ def on_open(ws):
         return
     ws.send(json.dumps({
         "APIKey": token,
-        # שנה ל (אזור גדול יותר של המפרץ הפרסי):
         "BoundingBoxes": [[[22.0, 50.0], [28.0, 60.0]]],
         "FilterMessageTypes": ["PositionReport"]
     }))
     print("📡 Subscribed to Hormuz AIS feed")
 
 def run():
-    conn = init_db()
-    before = conn.execute("SELECT COUNT(*) FROM ship_logs").fetchone()[0]
+    init_db()
+    before = sqlite3.connect(DB_PATH).execute("SELECT COUNT(*) FROM ship_logs").fetchone()[0]
 
     ws = websocket.WebSocketApp(
         "wss://stream.aisstream.io/v0/stream",
@@ -59,16 +61,14 @@ def run():
         on_error=lambda ws, e: print(f"WS Error: {e}"),
         on_close=lambda ws, c, m: print("Connection closed")
     )
-    ws.db_conn = conn
 
     t = threading.Thread(target=ws.run_forever, daemon=True)
     t.start()
     time.sleep(DURATION)
     ws.close()
 
-    after = conn.execute("SELECT COUNT(*) FROM ship_logs").fetchone()[0]
+    after = sqlite3.connect(DB_PATH).execute("SELECT COUNT(*) FROM ship_logs").fetchone()[0]
     print(f"✅ Captured {after - before} new vessels (total: {after})")
-    conn.close()
 
 if __name__ == "__main__":
     run()
