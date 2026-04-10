@@ -2,8 +2,8 @@ name: Collect AIS Data
 
 on:
   schedule:
-    - cron: '0 6,18 * * *'   # פעמיים ביום: 6 בבוקר ו-18 בערב UTC
-  workflow_dispatch:           # אפשרות להפעיל ידנית
+    - cron: '0 6,18 * * *'
+  workflow_dispatch:
 
 jobs:
   collect:
@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: data            # ענף ה-data ישירות
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-python@v5
@@ -19,6 +19,11 @@ jobs:
           python-version: '3.11'
 
       - run: pip install websocket-client
+
+      - name: Download existing DB from data branch
+        run: |
+          git fetch origin data
+          git checkout origin/data -- hormuz_ships.db || echo "No existing DB, starting fresh"
 
       - name: Run collector
         env:
@@ -32,4 +37,4 @@ jobs:
           git config user.email "actions@github.com"
           git add hormuz_ships.db
           git diff --staged --quiet || git commit -m "data: $(date -u '+%Y-%m-%d %H:%M')"
-          git push
+          git push origin HEAD:data
