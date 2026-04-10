@@ -42,7 +42,8 @@ def on_open(ws):
         return
     ws.send(json.dumps({
         "APIKey": token,
-        "BoundingBoxes": [[[26.0, 55.0], [27.5, 57.0]]],
+        # שנה ל (אזור גדול יותר של המפרץ הפרסי):
+        "BoundingBoxes": [[[22.0, 50.0], [28.0, 60.0]]],
         "FilterMessageTypes": ["PositionReport"]
     }))
     print("📡 Subscribed to Hormuz AIS feed")
