@@ -31,7 +31,7 @@ div[data-testid="metric-container"] [data-testid="stMetricDelta"] { font-size: 1
 </style>
 """, unsafe_allow_html=True)
 
-DB_URL = "https://raw.githubusercontent.com/shaytheboss/hormuz-vessel-tracker/data/hormuz_ships.db"
+DB_URL = "https://raw.githubusercontent.com/shaytheboss/hormuz-vessel-tracker-claude-code/data/hormuz_ships.db"
 LOCAL_DB = "/tmp/hormuz_ships.db"
 
 @st.cache_data(ttl=1800)  # קאש חצי שעה
