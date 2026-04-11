@@ -25,6 +25,9 @@ jobs:
           git fetch origin data
           git checkout origin/data -- hormuz_ships.db || echo "No existing DB, starting fresh"
 
+      - name: Reset DB — schema update
+        run: rm -f hormuz_ships.db
+
       - name: Run collector
         env:
           AIS_TOKEN: ${{ secrets.AIS_TOKEN }}
