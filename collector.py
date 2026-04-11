@@ -33,7 +33,9 @@ def on_message(ws, message):
         )
         conn.commit()
         conn.close()
-        print(f"✓ {meta.get('ShipName', 'Unknown')}")
+        print(f"✓ {meta.get('ShipName')} | type={meta.get('ShipType')} | flag={meta.get('Flag')} | MMSI={meta.get('MMSI')} | lat={pos.get('Latitude')} | lon={pos.get('Longitude')}")
+        print(f"  META KEYS: {list(meta.keys())}")
+        print(f"  POS KEYS: {list(pos.keys())}")
     except Exception as e:
         print(f"Error: {e}")
 
