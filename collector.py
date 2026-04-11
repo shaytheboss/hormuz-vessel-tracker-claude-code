@@ -3,12 +3,6 @@ import websocket, json, sqlite3, os, datetime, threading, time
 DB_PATH = "hormuz_ships.db"
 DURATION = int(os.getenv("COLLECTION_SECONDS", "300"))
 
-NAV_STATUS = {
-    0: "בתנועה", 1: "עוגן", 2: "לא תחת פיקוד", 3: "מוגבל בתמרון",
-    4: "מוגבל שוקע", 5: "קשור לרציף", 6: "על שרטון", 7: "דיג",
-    8: "שייט", 15: "לא מוגדר"
-}
-
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     conn.execute('''CREATE TABLE IF NOT EXISTS ship_logs
@@ -49,13 +43,14 @@ def on_message(ws, message):
 
 def on_open(ws):
     token = os.environ.get("AIS_TOKEN", "")
+    print(f"TOKEN LENGTH: {len(token)}")
     if not token:
         print("ERROR: AIS_TOKEN not set")
         ws.close()
         return
     ws.send(json.dumps({
         "APIKey": token,
-        "BoundingBoxes": [[[25.5, 56.0], [27.0, 58.5]]],
+        "BoundingBoxes": [[[24.0, 55.0], [27.5, 60.0]]],
         "FilterMessageTypes": ["PositionReport"]
     }))
     print("📡 Subscribed to Hormuz AIS feed")
