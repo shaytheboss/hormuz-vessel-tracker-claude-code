@@ -12,6 +12,18 @@ def init_db():
     conn.commit()
     conn.close()
 
+def parse_timestamp(ts_str):
+    try:
+        # מנקה את הפורמט: "2026-04-11 08:37:43.328790216 +0000 UTC"
+        clean = ts_str.replace(" +0000 UTC", "").strip()
+        # מקצר נאנו-שניות ל-מיקרו-שניות (6 ספרות)
+        if "." in clean:
+            parts = clean.split(".")
+            clean = parts[0] + "." + parts[1][:6]
+        return datetime.datetime.strptime(clean, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
 def on_message(ws, message):
     try:
         msg = json.loads(message)
@@ -19,6 +31,7 @@ def on_message(ws, message):
         pos = msg.get("Message", {}).get("PositionReport", {})
         if not (meta and pos and pos.get("Latitude")):
             return
+        ts = parse_timestamp(meta.get("time_utc", ""))
         conn = sqlite3.connect(DB_PATH)
         conn.execute(
             """INSERT INTO ship_logs
@@ -28,7 +41,7 @@ def on_message(ws, message):
              str(meta.get("ShipName", "Unknown")).strip(),
              pos.get("Latitude"),
              pos.get("Longitude"),
-             meta.get("time_utc", datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")),
+             ts,
              pos.get("Cog"),
              pos.get("Sog"),
              pos.get("TrueHeading"),
