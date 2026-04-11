@@ -116,7 +116,7 @@ st.divider()
 if hours and len(filtered) > 0:
     st.subheader("📊 תנועה לפי שעה")
     filtered_copy = filtered.copy()
-    filtered_copy['hour'] = filtered_copy['timestamp'].dt.floor('H')
+    filtered_copy['hour'] = filtered_copy['timestamp'].dt.floor('h')
     hourly = filtered_copy.groupby('hour').size().reset_index(name='count')
     st.bar_chart(hourly.set_index('hour')['count'], color="#378ADD")
     st.divider()
